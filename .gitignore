@@ -1,0 +1,30 @@
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+batch_login
+captcha_solver
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
+
+# Go workspace file
+go.work
+
+# Dependencies
+vendor/
+
+# Results and captcha directories
+results/
+captcha/
+
+# Data files
+*.xlsx
+*.csv
+*.zip
+*.txt
