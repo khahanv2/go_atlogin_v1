@@ -6,72 +6,67 @@ import (
 
 	"github.com/bongg/autologin/client"
 	"github.com/bongg/autologin/config"
+	"github.com/bongg/autologin/logger"
 	"github.com/bongg/autologin/utils"
 )
 
 func main() {
+	// Khởi tạo logger - true để bật debug mode
+	logger.Init(true)
+	
+	// Log thông báo khởi động
+	logger.Info("Ứng dụng auto login bắt đầu khởi động")
+	
 	// Tạo cấu hình với giá trị mặc định
 	cfg := config.NewConfig("", "")
-
+	logger.Debug("Đã tạo cấu hình mặc định", "baseURL", cfg.BaseURL)
+	
 	// Tạo client
 	cli := client.NewClient(cfg)
-
+	logger.Info("Đã khởi tạo HTTP client")
+	
 	// Lấy dữ liệu ban đầu (token, cookies)
-	fmt.Println("Đang lấy thông tin từ trang chủ...")
+	logger.Info("Đang lấy thông tin từ trang chủ...")
 	err := cli.FetchInitialData()
 	if err != nil {
-		fmt.Printf("Lỗi khi lấy dữ liệu ban đầu: %v\n", err)
+		logger.Error("Lỗi khi lấy dữ liệu ban đầu", err)
 		os.Exit(1)
 	}
-
-	// Hiển thị các thông tin đã lấy được
-	fmt.Println("\n=== THÔNG TIN ĐÃ LẤY ĐƯỢC ===")
-
-	fmt.Println("User-Agent:")
-	fmt.Printf("%s\n\n", cli.GetUserAgent())
 	
-	fmt.Println("RequestVerificationToken:")
-	fmt.Printf("%s\n\n", cli.GetToken())
-
+	logger.Info("Đã lấy thông tin trang chủ thành công")
+	
+	// Thông tin chi tiết ở cấp độ debug
+	logger.Debug("User-Agent", "value", cli.GetUserAgent())
+	logger.Debug("Token", "value", cli.GetToken())
+	
 	cookieValue := cli.GetCookie()
 	cookieType := "BBOSID"
 	if utils.ExtractCookie(fmt.Sprintf("IT=%s", cookieValue)) != "" {
 		cookieType = "IT"
 	}
 	
-	fmt.Printf("Cookie %s:\n", cookieType)
-	fmt.Printf("%s\n\n", cookieValue)
-	
-	fmt.Println("FingerIDX (Giả lập):")
-	fmt.Printf("%s\n\n", cli.GetFingerIDX())
-	
-	fmt.Println("Tất cả cookies:")
-	fmt.Printf("%s\n", cli.GetAllCookies())
+	logger.Debug("Cookie", "type", cookieType, "value", cookieValue)
+	logger.Debug("FingerIDX", "value", cli.GetFingerIDX())
+	logger.Debug("Cookies", "all", cli.GetAllCookies())
 	
 	if idyKey := cli.GetIdyKey(); idyKey != "" {
-		fmt.Println("\nIdyKey (nếu có):")
-		fmt.Printf("%s\n", idyKey)
+		logger.Debug("IdyKey", "value", idyKey)
 	}
-
-	// Lấy thông tin Slider Captcha (giữ nguyên phiên)
-	fmt.Println("\n=== LẤY SLIDER CAPTCHA ===")
+	
+	// Lấy thông tin Slider Captcha
+	logger.Info("Đang lấy slider captcha...")
 	captchaData, err := cli.GetSliderCaptcha()
 	if err != nil {
-		fmt.Printf("Lỗi khi lấy captcha: %v\n", err)
+		logger.Error("Lỗi khi lấy captcha", err)
 	} else {
-		fmt.Println("Dữ liệu Captcha (JSON):")
-		fmt.Println(captchaData)
+		logger.Debug("Dữ liệu Captcha", "json", captchaData)
 	}
-
-	fmt.Println("\n=== THÔNG TIN CHO CURL ===")
-	fmt.Printf("-H 'user-agent: %s'\n", cli.GetUserAgent())
-	fmt.Printf("-H 'requestverificationtoken: %s'\n", cli.GetToken())
-	if cli.GetCookie() != "" {
-		cookieValue := cli.GetCookie()
-		cookieType := "BBOSID"
-		if utils.ExtractCookie(fmt.Sprintf("IT=%s", cookieValue)) != "" {
-			cookieType = "IT"
-		}
-		fmt.Printf("-b '%s=%s'\n", cookieType, cookieValue)
-	}
+	
+	// Hiển thị thông tin CURL nếu cần debug
+	logger.Debug("Thông tin cho CURL", 
+		"user-agent", cli.GetUserAgent(),
+		"token", cli.GetToken(),
+		"cookie", fmt.Sprintf("%s=%s", cookieType, cookieValue))
+	
+	logger.Info("Ứng dụng hoàn thành xử lý")
 }
